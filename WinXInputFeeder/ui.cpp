@@ -250,6 +250,12 @@ void UIStatePrivate::ShowNavWindow() {
 		feeder->RemoveGamepad(selectedGamepadId);
 		--selectedGamepadId;
 	}
+	ImGui::SameLine();
+	if (ImGui::Button("Duplicate")) {
+		feeder->AddX360();
+		auto& curr = profile.gamepads[selectedGamepadId];
+		auto& target = profile;
+	}
 
 	for (int gamepadId = 0; gamepadId < x360s.size(); ++gamepadId) {
 		char id[256];
