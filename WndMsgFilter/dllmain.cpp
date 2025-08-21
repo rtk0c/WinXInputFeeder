@@ -10,6 +10,7 @@
 #include <Windows.h>
 
 HMODULE gHModule;
+HHOOK gInstalledHook;
 
 LRESULT CALLBACK GetMsgProc(int code, WPARAM wParam, LPARAM lParam) {
 	if (code < 0)

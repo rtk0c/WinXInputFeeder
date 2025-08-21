@@ -7,3 +7,4 @@
 // Defined in dllmain.cpp
 
 extern HMODULE gHModule;
+extern HHOOK gInstalledHook;
