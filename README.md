@@ -1,6 +1,7 @@
 # WinXInputFeeder
 
-Windows software for emulating up to 4 Xbox controllers from different keyboards.
+Windows software for emulating up to 4 Xbox controllers from different keyboards.  
+See [screenshots here](https://github.com/rtk0c/WinXInputFeeder/discussions/1).
 
 ## Installation
 
