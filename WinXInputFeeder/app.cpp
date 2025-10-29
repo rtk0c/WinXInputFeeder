@@ -61,7 +61,7 @@ LRESULT CALLBACK MainWindowWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 	case WM_KEYDOWN: {
 		auto& app = *reinterpret_cast<App*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
 		if (wParam == VK_DOWN)
-			app.OnDpiChanged(96);
+			app.mainUI.OnDpiChanged(96);
 		break;
 	}
 
@@ -115,7 +115,7 @@ LRESULT CALLBACK MainWindowWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 			newRect->bottom - newRect->top,
 			SWP_NOZORDER | SWP_NOACTIVATE);
 
-		app.OnDpiChanged(HIWORD(wParam));
+		app.mainUI.OnDpiChanged(HIWORD(wParam));
 		break;
 	}
 	}
@@ -282,7 +282,7 @@ App::App(HINSTANCE hInstance)
 	io.IniFilename = "imgui_state.ini";
 
 	UINT dpi = GetDpiForWindow(mainWindow.hWnd);
-	OnDpiChanged(dpi, false);
+	mainUI.OnDpiChanged(dpi);
 
 	ImGui_ImplWin32_Init(mainWindow.hWnd);
 	ImGui_ImplDX11_Init(mainWindow.d3dDevice, mainWindow.d3dDeviceContext);
@@ -411,32 +411,6 @@ void App::OnIdevDisconnect(HANDLE hDevice) {
 	LOG_DEBUG("Disconnected {} {}", RawInputTypeToString(idev.info.dwType), Utf8ToWide(idev.nameUtf8));
 #endif
 	devices.erase(hDevice);
-}
-
-void App::OnDpiChanged(UINT newDpi, bool recreateAtlas) {
-	scaleFactor = static_cast<float>(newDpi) / USER_DEFAULT_SCREEN_DPI;
-
-	auto& io = ImGui::GetIO();
-	auto& style = ImGui::GetStyle();
-
-	// Yes, we are leaking as the user switch between different DPIs
-	// But having so many monitors of different DPI, _and_ constantly dragging the window between them to cause exceesive memory usage seems very unlikely
-	ImFont* font;
-	auto iter = fonts.find(newDpi);
-	if (iter != fonts.end())
-		font = iter->second;
-	else {
-		font = io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/segoeui.ttf", 16.0f * scaleFactor);
-		io.Fonts->Build();
-		if (recreateAtlas)
-			// https://github.com/ocornut/imgui/issues/2311#issuecomment-460039964
-			ImGui_ImplDX11_InvalidateDeviceObjects();
-		fonts.emplace(newDpi, font);
-	}
-
-	io.FontDefault = font;
-	style = {};
-	style.ScaleAllSizes(scaleFactor);
 }
 
 int AppMain(HINSTANCE hInstance, std::span<const std::wstring_view> args) {

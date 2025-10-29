@@ -10,6 +10,7 @@
 #include <imgui_internal.h>
 #include <imgui_stdlib.h>
 #include <string>
+#include <unordered_map>
 
 using namespace std::literals;
 
@@ -45,8 +46,11 @@ static bool ButtonDisablable(const char* msg, bool disabled) {
 struct UIStatePrivate {
 	UIState* pub;
 	FeederEngine* feeder = nullptr;
+	std::unordered_map<UINT, ImFont*> fonts;
+	std::string fontFilePath;
 	std::string newProfileName;
 	int selectedGamepadId = -1;
+	bool alreadyCreatedFontAtlas = false;
 
 	UIStatePrivate(UIState& s)
 		: pub{ &s }
@@ -105,6 +109,9 @@ static void ShowTextForKey(KeyCode boundKey, bool pressed) {
 UIState::UIState(App& app)
 	: p{ new UIStatePrivate(*this) }
 {
+	auto& p = *static_cast<UIStatePrivate*>(this->p);
+	// TODO load from config
+	p.fontFilePath = "C:/Windows/Fonts/segoeui.ttf";
 }
 
 UIState::~UIState() {
@@ -115,6 +122,37 @@ void UIState::OnFeederEngine(FeederEngine* feeder) {
 	auto& p = *static_cast<UIStatePrivate*>(this->p);
 
 	p.feeder = feeder;
+}
+
+void UIState::OnDpiChanged(UINT newDpi) {
+	auto& p = *static_cast<UIStatePrivate*>(this->p);
+
+	auto scaleFactor = static_cast<float>(newDpi) / USER_DEFAULT_SCREEN_DPI;
+
+	auto& io = ImGui::GetIO();
+	auto& style = ImGui::GetStyle();
+	auto& fonts = p.fonts;
+
+	// Yes, we are leaking as the user switch between different DPIs
+	// But having so many monitors of different DPI, _and_ constantly dragging the window between them to cause exceesive memory usage seems very unlikely
+	ImFont* font;
+	auto iter = fonts.find(newDpi);
+	if (iter != fonts.end())
+		font = iter->second;
+	else {
+		font = io.Fonts->AddFontFromFileTTF(p.fontFilePath.c_str(), 16.0f * scaleFactor);
+		io.Fonts->Build();
+		if (p.alreadyCreatedFontAtlas) {
+			// https://github.com/ocornut/imgui/issues/2311#issuecomment-460039964
+			ImGui_ImplDX11_InvalidateDeviceObjects();
+		}
+		p.alreadyCreatedFontAtlas = true;
+		fonts.emplace(newDpi, font);
+	}
+
+	io.FontDefault = font;
+	style = {};
+	style.ScaleAllSizes(scaleFactor);
 }
 
 void UIState::Show() {

@@ -20,6 +20,7 @@ public:
 	~UIState();
 
 	void OnFeederEngine(FeederEngine*);
+	void OnDpiChanged(UINT newDpi);
 
 	void Show();
 };
