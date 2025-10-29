@@ -220,13 +220,10 @@ void MainWindow::ResizeRenderTarget(UINT width, UINT height) {
 }
 
 static toml::table LoadConfigFile() {
-	toml::table configFile;
-	try {
-		configFile = toml::parse_file(fs::path(L"config.toml"));
-	}
-	catch (const toml::parse_error&) {
+	if (!fs::exists(L"config.toml"))
 		return toml::table();
-	}
+
+	auto configFile = toml::parse_file(fs::path(L"config.toml"));
 
 	if (auto configAltPath = configFile["AltPath"].value<std::string>()) {
 		// If parse error, let it propagate out
@@ -235,16 +232,15 @@ static toml::table LoadConfigFile() {
 	return configFile;
 }
 
-static std::unique_ptr<FeederEngine> MakeFeederEngine(HWND eventHwnd, ViGEm& vigem) {
-	return std::make_unique<FeederEngine>(eventHwnd, Config(LoadConfigFile()), vigem);
-}
-
 App::App(HINSTANCE hInstance)
 	: hInstance{ hInstance }
 	, mainWindow(*this, hInstance)
 	, mainUI(*this)
-	, feeder(MakeFeederEngine(mainWindow.hWnd, vigem))
 {
+	auto config = LoadConfigFile();
+	fontFilePath = config["FontFile"].value_or<std::string>("C:/Windows/Fonts/segoeui.ttf");
+	fontSize = config["FontSize"].value_or<float>(16.0f);
+	feeder.reset(new FeederEngine(mainWindow.hWnd, Config(config), vigem));
 	mainUI.OnFeederEngine(feeder.get());
 
 	constexpr UINT kNumRid = 2;
@@ -419,7 +415,7 @@ void App::OnDpiChanged(UINT newDpi, bool recreateAtlas) {
 	if (iter != fonts.end())
 		font = iter->second;
 	else {
-		font = io.Fonts->AddFontFromFileTTF("C:/Windows/Fonts/segoeui.ttf", 16.0f * scaleFactor);
+		font = io.Fonts->AddFontFromFileTTF(fontFilePath.c_str(), fontSize * scaleFactor);
 		io.Fonts->Build();
 		if (recreateAtlas)
 			// https://github.com/ocornut/imgui/issues/2311#issuecomment-460039964

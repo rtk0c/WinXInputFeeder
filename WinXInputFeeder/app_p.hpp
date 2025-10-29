@@ -49,6 +49,7 @@ public:
 
 	std::unique_ptr<FeederEngine> feeder;
 
+	std::string fontFilePath;
 	std::unordered_map<UINT, ImFont*> fonts;
 	std::unordered_map<HANDLE, IdevDevice> devices;
 
@@ -58,6 +59,7 @@ public:
 	size_t rawinputSize = 0;
 
 	float scaleFactor = 1.0f;
+	float fontSize;
 	int shownWindowCount = 0;
 	bool configDirty = false;
 	bool capturingCursor = false;
