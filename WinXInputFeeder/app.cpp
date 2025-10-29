@@ -58,13 +58,6 @@ LRESULT CALLBACK MainWindowWndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM l
 		return 0;
 	}
 
-	case WM_KEYDOWN: {
-		auto& app = *reinterpret_cast<App*>(GetWindowLongPtrW(hWnd, GWLP_USERDATA));
-		if (wParam == VK_DOWN)
-			app.mainUI.OnDpiChanged(96);
-		break;
-	}
-
 	case WM_DESTROY: {
 		PostQuitMessage(0);
 		return 0;
