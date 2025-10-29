@@ -49,6 +49,7 @@ public:
 
 	std::unique_ptr<FeederEngine> feeder;
 
+	std::unordered_map<UINT, ImFont*> fonts;
 	std::unordered_map<HANDLE, IdevDevice> devices;
 
 	// For a RAWINPUT*
@@ -72,5 +73,6 @@ public:
 	// DO NOT CALL when inside an ImGui frame (i.e. in MainRenderFrame)
 	IdevDevice& OnIdevConnect(HANDLE hDevice);
 	void OnIdevDisconnect(HANDLE hDevice);
+	void OnDpiChanged(UINT newDpi, bool recreateAtlas = true);
 	LRESULT OnRawInput(RAWINPUT*);
 };
